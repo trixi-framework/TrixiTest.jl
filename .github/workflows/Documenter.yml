@@ -31,7 +31,7 @@ jobs:
       - name: Set up Julia
         uses: julia-actions/setup-julia@v1
         with:
-          version: '1'
+          version: '1.10'
           show-versioninfo: true
       - uses: julia-actions/cache@v1
       - name: Build package
