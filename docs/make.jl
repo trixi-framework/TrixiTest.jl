@@ -16,7 +16,7 @@ DocMeta.setdocmeta!(TrixiTest, :DocTestSetup, :(using TrixiTest); recursive = tr
 
 # Copy files to not need to synchronize them manually
 function copy_file(filename, replaces...; new_filename = lowercase(filename))
-    content = read(joinpath(trixibase_root_dir, filename), String)
+    content = read(joinpath(trixitest_root_dir, filename), String)
     content = replace(content, replaces...)
 
     header = """
