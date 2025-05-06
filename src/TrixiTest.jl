@@ -27,7 +27,6 @@ macro trixi_test_nowarn(expr, additional_ignore_content = String[])
                 # Patterns matching the following ones will be ignored. Additional patterns
                 # passed as arguments can also be regular expressions, so we just use the
                 # type `Any` for `ignore_content`.
-                println($additional_ignore_content)
                 ignore_content = Any["[ Info: You just called `trixi_include`. Julia may now compile the code, please be patient.\n"]
                 append!(ignore_content, $additional_ignore_content)
                 for pattern in ignore_content
