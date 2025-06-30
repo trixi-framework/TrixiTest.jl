@@ -29,7 +29,8 @@
             write(io, example)
             close(io)
 
-            @test_trixi_include_base(path, additional_ignore_content=[r"┌ Warning: Test warning\n└ @ .+\n"])
+            @test_trixi_include_base(path,
+                                     additional_ignore_content=[r"┌ Warning: Test warning\n└ @ .+\n"])
         end
     end
 
