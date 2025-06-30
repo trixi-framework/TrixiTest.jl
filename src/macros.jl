@@ -141,7 +141,7 @@ end
 Similar to `@testset`, but wraps the code inside a temporary module to avoid
 namespace pollution. It also `include`s this file again to provide the
 definition of [`@test_trixi_include_base`](@ref). Moreover, it records the execution time
-of the testset similarly to [`timed_testset`](@ref).
+of the testset similarly to [`@timed_testset`](@ref).
 """
 macro trixi_testset(name, expr)
     @assert name isa String
