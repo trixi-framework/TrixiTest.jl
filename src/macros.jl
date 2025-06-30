@@ -162,6 +162,10 @@ macro trixi_testset(name, expr)
         using TrixiBase
         using TrixiBase: mpi_isroot
 
+        # We also include this file again to provide the definition of
+        # the other testing macros. This allows to use `@trixi_testset`
+        # in a nested fashion and also call `@trixi_test_nowarn` from
+        # there.
         include(@__FILE__)
         # We define `EXAMPLES_DIR` in (nearly) all test modules and use it to
         # get the path to the elixirs to be tested. However, that's not required
