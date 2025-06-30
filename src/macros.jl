@@ -157,7 +157,7 @@ macro trixi_testset(name, expr)
 
         # We also include this file again to provide the definition of
         # the other testing macros. This allows to use `@trixi_testset`
-        # in a nested fashion and also call `@test_nowarn_mod` from
+        # in a nested fashion and also call `@trixi_test_nowarn` from
         # there.
         include(@__FILE__)
 
