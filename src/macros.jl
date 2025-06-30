@@ -113,10 +113,32 @@ macro test_trixi_include(elixir, args...)
 end
 
 """
+    @timed_testset "name of the testset" #= code to test #=
+
+Similar to `@testset`, but prints the name of the testset and its runtime
+after execution.
+"""
+macro timed_testset(name, expr)
+    @assert name isa String
+    quote
+        local time_start = time_ns()
+        @testset $name $expr
+        local time_stop = time_ns()
+        if mpi_isroot()
+            flush(stdout)
+            @info("Testset "*$name*" finished in "
+                  *string(1.0e-9 * (time_stop - time_start))*" seconds.\n")
+            flush(stdout)
+        end
+    end
+end
+
+"""
     @trixi_testset "name of the testset" #= code to test #=
 
 Similar to `@testset`, but wraps the code inside a temporary module to avoid
-namespace pollution.
+namespace pollution. It also `include`s this file again to provide the
+definition of `@test_trixi_include`.
 """
 macro trixi_testset(name, expr)
     @assert name isa String
