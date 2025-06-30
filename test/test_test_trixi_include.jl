@@ -8,12 +8,12 @@
             write(io, example)
             close(io)
 
-            @test_trixi_include(path)
+            @test_trixi_include_base(path)
 
             @test @isdefined x
             @test x == 4
 
-            @test_trixi_include(path, x=9)
+            @test_trixi_include_base(path, x=9)
 
             @test @isdefined x
             @test x == 9
@@ -32,7 +32,7 @@
             write(io, example)
             close(io)
 
-            @test_trixi_include(path, l2=1.0, linf=2.0)
+            @test_trixi_include_base(path, l2=1.0, linf=2.0)
         end
     end
 
@@ -45,7 +45,7 @@
             write(io, example)
             close(io)
 
-            @test_trixi_include(path, maxiters=1)
+            @test_trixi_include_base(path, maxiters=1)
         end
     end
 end

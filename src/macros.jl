@@ -42,18 +42,22 @@ macro trixi_test_nowarn(expr, additional_ignore_content = String[])
 end
 
 """
-    @test_trixi_include(elixir; l2=nothing, linf=nothing, RealT=Float64,
-                                atol=500*eps(RealT), rtol=sqrt(eps(RealT)),
-                                parameters...)
+    @test_trixi_include_base(elixir; additional_ignore_content = Any[],
+                                     l2=nothing, linf=nothing, RealT=Float64,
+                                     atol=500*eps(RealT), rtol=sqrt(eps(RealT)),
+                                     parameters...)
 
-Test Trixi by calling `trixi_include(elixir; parameters...)`.
+Test an `elixir` file by calling `trixi_include(elixir; parameters...)`.
+The `additional_ignore_content` argument is passed to [`@trixi_test_nowarn`](@ref)
+and can be used to ignore additional patterns in the `stderr` output.
 By default, only the absence of error output is checked.
 If `l2` or `linf` are specified, in addition the resulting L2/Linf errors
 are compared approximately against these reference values, using `atol, rtol`
 as absolute/relative tolerance.
 """
-macro test_trixi_include(elixir, args...)
+macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
+    local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
     local l2 = get_kwarg(args, :l2, nothing)
     local linf = get_kwarg(args, :linf, nothing)
     local RealT_symbol = get_kwarg(args, :RealT, :Float64)
@@ -66,7 +70,7 @@ macro test_trixi_include(elixir, args...)
     local kwargs = Pair{Symbol, Any}[]
     for arg in args
         if (arg.head == :(=) &&
-            !(arg.args[1] in (:l2, :linf, :RealT, :atol, :rtol)))
+            !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
             push!(kwargs, Pair(arg.args...))
         end
     end
@@ -78,15 +82,13 @@ macro test_trixi_include(elixir, args...)
         # if `maxiters` is set in tests, it is usually set to a small number to
         # run only a few steps - ignore possible warnings coming from that
         if any(==(:maxiters) ∘ first, $kwargs)
-            additional_ignore_content = [
-                r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
-                r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n"]
-        else
-            additional_ignore_content = []
+            push!($additional_ignore_content,
+                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
+                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n")
         end
 
         # evaluate examples in the scope of the module they're called from
-        @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $kwargs...) additional_ignore_content
+        @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $kwargs...) $additional_ignore_content
 
         # if present, compare l2 and linf errors against reference values
         if !isnothing($l2) || !isnothing($linf)

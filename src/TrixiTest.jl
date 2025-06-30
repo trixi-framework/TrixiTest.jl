@@ -7,6 +7,6 @@ include("auxiliary.jl")
 include("macros.jl")
 
 export get_kwarg
-export @trixi_test_nowarn, @test_trixi_include, @timed_testset, @trixi_testset
+export @trixi_test_nowarn, @test_trixi_include_base, @timed_testset, @trixi_testset
 
 end # module TrixiTest
