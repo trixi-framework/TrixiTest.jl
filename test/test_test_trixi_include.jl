@@ -1,4 +1,4 @@
-@testset verbose=true "@test_trixi_include" begin
+@testset verbose=true "@test_trixi_include_base" begin
     @trixi_testset "basic" begin
         example = """
             x = 4
@@ -17,6 +17,19 @@
 
             @test @isdefined x
             @test x == 9
+        end
+    end
+
+    @trixi_testset "additional_ignore_content" begin
+        example = """
+            @warn "Test warning"
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include_base(path, additional_ignore_content=[r"┌ Warning: Test warning\n└ @ .+\n"])
         end
     end
 
