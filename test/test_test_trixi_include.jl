@@ -22,7 +22,7 @@
     @trixi_testset "with l2" begin
         example = """
             function analysis_callback(sol)
-	            return sol[1], sol[2]
+             return sol[1], sol[2]
             end
             sol = [1.0, 2.0]
             """
@@ -31,7 +31,7 @@
             write(io, example)
             close(io)
 
-            @test_trixi_include(path, l2 = 1.0)
+            @test_trixi_include(path, l2=1.0)
         end
     end
 end
