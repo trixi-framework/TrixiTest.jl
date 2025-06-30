@@ -65,11 +65,11 @@
 end
 
 module TestTrixiTest
-    using TrixiTest
+using TrixiTest
 
-    EXAMPLES_DIR = "TEST_DIR"
+EXAMPLES_DIR = "TEST_DIR"
 
-    @trixi_testset "EXAMPLES_DIR" begin
-        @test @isdefined EXAMPLES_DIR
-    end
+@trixi_testset "EXAMPLES_DIR" begin
+    @test @isdefined EXAMPLES_DIR
+end
 end
