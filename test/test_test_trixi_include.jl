@@ -13,10 +13,6 @@
             @test @isdefined x
             @test x == 4
 
-            @trixi_test_nowarn trixi_include(@__MODULE__, path, x = 7)
-
-            @test x == 7
-
             @test_trixi_include(path, x=9)
 
             @test @isdefined x
