@@ -17,7 +17,7 @@
 
             @test x == 7
 
-            @test_trixi_include(path, x = 9)
+            @test_trixi_include(path, x=9)
 
             @test @isdefined x
             @test x == 9
@@ -37,6 +37,19 @@
             close(io)
 
             @test_trixi_include(path, l2=1.0, linf=2.0)
+        end
+    end
+
+    @trixi_testset "maxiters" begin
+        example = """
+            maxiters = 4
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include(path, maxiters=1)
         end
     end
 end
