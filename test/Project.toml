@@ -2,8 +2,10 @@
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ExplicitImports = "7d51a73a-1435-4ff3-83d9-f097790105c7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TrixiBase = "9a0f1c46-06d5-4909-a5a3-ce25d3fa3284"
 
 [compat]
 Aqua = "0.8"
 ExplicitImports = "1.0.1"
 Test = "1"
+TrixiBase = "0.1.3"
