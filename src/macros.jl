@@ -128,6 +128,8 @@ macro trixi_testset(name, expr)
         @eval module $mod
         using Test
         using TrixiTest
+        using TrixiBase
+        using TrixiBase: mpi_isroot
 
         # We also include this file again to provide the definition of
         # the other testing macros. This allows to use `@trixi_testset`
