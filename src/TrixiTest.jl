@@ -1,5 +1,8 @@
 module TrixiTest
 
+using Test: @test
+using TrixiBase: mpi_isroot, trixi_include
+
 include("auxiliary.jl")
 include("macros.jl")
 
