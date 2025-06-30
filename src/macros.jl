@@ -140,30 +140,45 @@ end
 
 Similar to `@testset`, but wraps the code inside a temporary module to avoid
 namespace pollution. It also `include`s this file again to provide the
-definition of `@test_trixi_include`.
+definition of [`@test_trixi_include_base`](@ref). Moreover, it records the execution time
+of the testset similarly to [`timed_testset`](@ref).
 """
 macro trixi_testset(name, expr)
     @assert name isa String
-
-    mod = gensym()
-
     # TODO: `@eval` is evil
+    # We would like to use
+    #   mod = gensym(name)
+    #   ...
+    #   module $mod
+    # to create new module names for every test set. However, this is not
+    # compatible with the dirty hack using `@eval` to get the mapping when
+    # loading structured, curvilinear meshes. Thus, we need to use a plain
+    # module name here.
     quote
-        @eval module $mod
+        local time_start = time_ns()
+        @eval module TrixiTestModule
         using Test
         using TrixiTest
         using TrixiBase
         using TrixiBase: mpi_isroot
 
-        # We also include this file again to provide the definition of
-        # the other testing macros. This allows to use `@trixi_testset`
-        # in a nested fashion and also call `@trixi_test_nowarn` from
-        # there.
         include(@__FILE__)
-
-        @testset verbose=true $name $expr
+        # We define `EXAMPLES_DIR` in (nearly) all test modules and use it to
+        # get the path to the elixirs to be tested. However, that's not required
+        # and we want to fail gracefully if it's not defined.
+        try
+            import ..EXAMPLES_DIR
+        catch
+            nothing
         end
-
+        @testset $name $expr
+        end
+        local time_stop = time_ns()
+        if mpi_isroot()
+            flush(stdout)
+            @info("Testset "*$name*" finished in "
+                  *string(1.0e-9 * (time_stop - time_start))*" seconds.\n")
+        end
         nothing
     end
 end
