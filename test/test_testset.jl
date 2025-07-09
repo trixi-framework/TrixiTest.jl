@@ -9,5 +9,9 @@ EXAMPLES_DIR = "TEST_DIR"
 
 @trixi_testset "EXAMPLES_DIR" begin
     @test @isdefined EXAMPLES_DIR
+
+    @trixi_testset "EXAMPLES_DIR nested" begin
+        @test @isdefined EXAMPLES_DIR
+    end
 end
 end
