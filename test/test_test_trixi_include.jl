@@ -2,7 +2,8 @@ macro test_trixi_include(expr, additional_ignore_content = [])
     quote
         add_to_additional_ignore_content = [r"┌ Warning: Test warning\n└ @ .+\n"]
         append!($additional_ignore_content, add_to_additional_ignore_content)
-        @test_trixi_include_base($(esc(expr)), additional_ignore_content = $additional_ignore_content)
+        @test_trixi_include_base($(esc(expr)),
+                                 additional_ignore_content=$additional_ignore_content)
     end
 end
 
