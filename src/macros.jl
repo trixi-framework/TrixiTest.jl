@@ -173,6 +173,13 @@ macro trixi_testset(name, expr)
         catch
             nothing
         end
+        # We usually also define a custom macro `@test_trixi_include`, which is a wrapper
+        # around `@test_trixi_include_base` that adds some additional patterns to ignore.
+        try
+            import ..@test_trixi_include
+        catch
+            nothing
+        end
         @testset $name $expr
         end
         local time_stop = time_ns()
