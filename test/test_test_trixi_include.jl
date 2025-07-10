@@ -18,12 +18,18 @@ end
             close(io)
 
             @test_trixi_include_base(path)
+            
+            @test @isdefined x
+            @test x == 4
             @test_trixi_include(path)
 
             @test @isdefined x
             @test x == 4
 
             @test_trixi_include_base(path, x=9)
+            
+            @test @isdefined x
+            @test x == 9
             @test_trixi_include(path, x=9)
 
             @test @isdefined x
