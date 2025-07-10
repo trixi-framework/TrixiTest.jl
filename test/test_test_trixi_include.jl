@@ -1,9 +1,9 @@
-macro test_trixi_include(expr, additional_ignore_content = [])
+macro test_trixi_include(expr, args...)
+    local add_to_additional_ignore_content = [r"┌ Warning: Test warning\n└ @ .+\n"]
+    args = append_to_kwargs(args, :additional_ignore_content,
+                            add_to_additional_ignore_content)
     quote
-        add_to_additional_ignore_content = [r"┌ Warning: Test warning\n└ @ .+\n"]
-        append!($additional_ignore_content, add_to_additional_ignore_content)
-        @test_trixi_include_base($(esc(expr)),
-                                 additional_ignore_content=$additional_ignore_content)
+        @test_trixi_include_base($(esc(expr)), $(args...))
     end
 end
 
@@ -18,11 +18,13 @@ end
             close(io)
 
             @test_trixi_include_base(path)
+            @test_trixi_include(path)
 
             @test @isdefined x
             @test x == 4
 
             @test_trixi_include_base(path, x=9)
+            @test_trixi_include(path, x=9)
 
             @test @isdefined x
             @test x == 9
@@ -40,7 +42,13 @@ end
 
             @test_trixi_include_base(path,
                                      additional_ignore_content=[r"┌ Warning: Test warning\n└ @ .+\n"])
+
+            # same test, but @test_trixi_include already knows about the additional warning
             @test_trixi_include(path)
+
+            # same test, with the additional warning added twice
+            @test_trixi_include(path,
+                                additional_ignore_content=[r"┌ Warning: Test warning\n└ @ .+\n"])
         end
     end
 
@@ -70,6 +78,7 @@ end
             close(io)
 
             @test_trixi_include_base(path, maxiters=1)
+            @test_trixi_include(path, maxiters=2)
         end
     end
 end

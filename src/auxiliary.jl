@@ -10,3 +10,21 @@ function get_kwarg(args, keyword, default_value)
     end
     return val
 end
+
+# Look for `keyword` in `args` and append `value` to its array of values.
+# If `keyword` does not exist, create an assigment of a vector containing `value`
+# to `keyword`. The new `args` is returned!
+function append_to_kwargs(args, keyword, value)
+    found = false
+    for arg in args
+        if arg.head == :(=) && arg.args[1] == keyword
+            append!(arg.args[2].args, value)
+            found = true
+            break
+        end
+    end
+    if !found
+        args = (:($keyword = [$(value...)]), args...)
+    end
+    return args
+end
