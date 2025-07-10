@@ -12,7 +12,7 @@ function get_kwarg(args, keyword, default_value)
 end
 
 # Look for `keyword` in `args` and append `value` to its array of values.
-# If `keyword` does not exist, create an assigment of a vector containing `value`
+# If `keyword` does not exist, create an assignment of a vector containing `value`
 # to `keyword`. The new `args` is returned!
 function append_to_kwargs(args, keyword, value)
     found = false
