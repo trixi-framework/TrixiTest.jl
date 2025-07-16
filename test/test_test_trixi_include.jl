@@ -7,7 +7,7 @@ macro test_trixi_include(expr, args...)
     end
 end
 
-@testset verbose=true "@test_trixi_include_base" begin
+@testset verbose=true "@test_trixi_include_base and @test_trixi_include" begin
     @trixi_testset "basic" begin
         example = """
             x = 4
@@ -58,7 +58,7 @@ end
         end
     end
 
-    @trixi_testset "with l2 and linf" begin
+    @trixi_testset "@test_trixi_include_base with l2 and linf" begin
         example = """
             function analysis_callback(sol)
              return sol[1], sol[2]
@@ -71,6 +71,22 @@ end
             close(io)
 
             @test_trixi_include_base(path, l2=1.0, linf=2.0)
+        end
+    end
+
+    @trixi_testset "@test_trixi_include with l2 and linf" begin
+        example = """
+            function analysis_callback(sol)
+             return sol[1], sol[2]
+            end
+            sol = [1.0, 2.0]
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include(path, l2=1.0, linf=2.0)
         end
     end
 
