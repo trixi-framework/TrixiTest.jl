@@ -92,7 +92,8 @@ macro test_trixi_include_base(elixir, args...)
 
         # if present, compare l2 and linf errors against reference values
         if !isnothing($l2) || !isnothing($linf)
-            l2_measured, linf_measured = invokelatest(analysis_callback, sol)
+            l2_measured, linf_measured = invokelatest((@__MODULE__).analysis_callback,
+                                                      (@__MODULE__).sol)
 
             if mpi_isroot() && !isnothing($l2)
                 @test length($l2) == length(l2_measured)
