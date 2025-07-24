@@ -57,7 +57,6 @@ as absolute/relative tolerance.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
-    local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
     local l2 = get_kwarg(args, :l2, nothing)
     local linf = get_kwarg(args, :linf, nothing)
     local RealT_symbol = get_kwarg(args, :RealT, :Float64)
@@ -78,10 +77,13 @@ macro test_trixi_include_base(elixir, args...)
     # if `maxiters` is set in tests, it is usually set to a small number to
     # run only a few steps - ignore possible warnings coming from that
     if any(==(:maxiters) ∘ first, kwargs)
-        push!(additional_ignore_content.args,
-            r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
-            r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n")
+        args = append_to_kwargs(args, :additional_ignore_content,
+                                [
+                                    r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
+                                    r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n"
+                                ])
     end
+    local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
 
     quote
         mpi_isroot() && println("═"^100)
