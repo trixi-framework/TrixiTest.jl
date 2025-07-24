@@ -123,7 +123,7 @@ after execution.
 """
 macro timed_testset(name, expr)
     @assert name isa String
-    quote
+    out = quote
         local time_start = time_ns()
         @testset $name $expr
         local time_stop = time_ns()
@@ -134,6 +134,7 @@ macro timed_testset(name, expr)
             flush(stdout)
         end
     end
+    return esc(out)
 end
 
 """
