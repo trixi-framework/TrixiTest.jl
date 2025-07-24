@@ -2,7 +2,7 @@ module TestAllocations
 function rhs!(du, u, semi, t)
     # Simulate some computation
     du .= u .+ t
-    return du
+    return nothing
 end
 end
 
