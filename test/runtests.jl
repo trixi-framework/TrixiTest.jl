@@ -6,4 +6,5 @@ using TrixiTest
     include("test_testset.jl")
     include("test_test_trixi_include.jl")
     include("test_trixi_test_nowarn.jl")
+    include("test_test_allocations.jl")
 end

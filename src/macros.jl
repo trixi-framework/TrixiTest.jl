@@ -192,3 +192,19 @@ macro trixi_testset(name, expr)
         nothing
     end
 end
+
+"""
+    @test_allocations(mod, semi, sol, allocs)
+
+Test that the memory allocations of `mod.rhs!` are below `allocs`
+(e.g., from type instabilities), where `mod` is a module containing
+a method `rhs!(du, u, semi, t)`.
+"""
+macro test_allocations(mod, semi, sol, allocs)
+    quote
+        t = $(esc(sol)).t[end]
+        u = $(esc(sol)).u[end]
+        du = similar(u)
+        @test (@allocated $(esc(mod)).rhs!(du, u, $(esc(semi)), t)) < $(esc(allocs))
+    end
+end
