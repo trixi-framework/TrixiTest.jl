@@ -75,17 +75,17 @@ macro test_trixi_include_base(elixir, args...)
         end
     end
 
+    # if `maxiters` is set in tests, it is usually set to a small number to
+    # run only a few steps - ignore possible warnings coming from that
+    if any(==(:maxiters) ∘ first, kwargs)
+        push!(additional_ignore_content.args,
+            r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
+            r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n")
+    end
+
     quote
         mpi_isroot() && println("═"^100)
         mpi_isroot() && println($(esc(elixir)))
-
-        # if `maxiters` is set in tests, it is usually set to a small number to
-        # run only a few steps - ignore possible warnings coming from that
-        if any(==(:maxiters) ∘ first, $kwargs)
-            push!($additional_ignore_content,
-                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
-                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n")
-        end
 
         # evaluate examples in the scope of the module they're called from
         @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $kwargs...) $additional_ignore_content
