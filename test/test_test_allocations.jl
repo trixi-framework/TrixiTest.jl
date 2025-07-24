@@ -1,9 +1,9 @@
 module TestAllocations
-    function rhs!(du, u, semi, t)
-        # Simulate some computation
-        du .= u .+ t
-        return du
-    end
+function rhs!(du, u, semi, t)
+    # Simulate some computation
+    du .= u .+ t
+    return du
+end
 end
 
 @testset "@test_allocations" begin
