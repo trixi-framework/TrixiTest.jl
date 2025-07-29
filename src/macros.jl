@@ -70,7 +70,8 @@ macro test_trixi_include_base(elixir, args...)
     local keys = Symbol[]
     local values = Any[]
     for arg in args
-        if (arg.head == :(=) && !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
+        if (arg.head == :(=) &&
+            !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
             push!(keys, arg.args[1])
             push!(values, arg.args[2])
         end
