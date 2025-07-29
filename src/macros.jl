@@ -57,14 +57,14 @@ as absolute/relative tolerance.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
-    local l2 = esc(get_kwarg(args, :l2, nothing))
-    local linf = esc(get_kwarg(args, :linf, nothing))
+    local l2 = get_kwarg(args, :l2, nothing)
+    local linf = get_kwarg(args, :linf, nothing)
     local RealT_symbol = get_kwarg(args, :RealT, :Float64)
     RealT = getfield(@__MODULE__, RealT_symbol)
     atol_default = 500 * eps(RealT)
     rtol_default = sqrt(eps(RealT))
-    local atol = esc(get_kwarg(args, :atol, atol_default))
-    local rtol = esc(get_kwarg(args, :rtol, rtol_default))
+    local atol = get_kwarg(args, :atol, atol_default)
+    local rtol = get_kwarg(args, :rtol, rtol_default)
 
     local kwargs = Pair{Symbol, Any}[]
     for arg in args
