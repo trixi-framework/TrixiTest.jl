@@ -66,17 +66,19 @@ macro test_trixi_include_base(elixir, args...)
     local atol = get_kwarg(args, :atol, atol_default)
     local rtol = get_kwarg(args, :rtol, rtol_default)
 
-    local kwargs = Pair{Symbol, Any}[]
+    # For all other keywords store their symbols and their values
+    local keys = Symbol[]
+    local values = Any[]
     for arg in args
-        if (arg.head == :(=) &&
-            !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
-            push!(kwargs, Pair(arg.args...))
+        if (arg.head == :(=) && !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
+            push!(keys, arg.args[1])
+            push!(values, arg.args[2])
         end
     end
 
     # if `maxiters` is set in tests, it is usually set to a small number to
     # run only a few steps - ignore possible warnings coming from that
-    if any(==(:maxiters) ∘ first, kwargs)
+    if any(==(:maxiters), keys)
         args = append_to_kwargs(args, :additional_ignore_content,
                                 [
                                     r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
@@ -89,8 +91,14 @@ macro test_trixi_include_base(elixir, args...)
         mpi_isroot() && println("═"^100)
         mpi_isroot() && println($elixir)
 
+        local kwargs = Pair{Symbol, Any}[]
+        # splatting interpolation for values: all expressions become values
+        for (key, value) in zip($keys, $(values...))
+            push!(kwargs, Pair(key, value))
+        end
+
         # evaluate examples in the scope of the module they're called from
-        @trixi_test_nowarn trixi_include(@__MODULE__, $elixir; $kwargs...) $additional_ignore_content
+        @trixi_test_nowarn trixi_include(@__MODULE__, $elixir; kwargs...) $additional_ignore_content
 
         # if present, compare l2 and linf errors against reference values
         if !isnothing($l2) || !isnothing($linf)
