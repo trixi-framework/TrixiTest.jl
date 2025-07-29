@@ -57,14 +57,14 @@ as absolute/relative tolerance.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
-    local l2 = get_kwarg(args, :l2, nothing)
-    local linf = get_kwarg(args, :linf, nothing)
+    local l2 = esc(get_kwarg(args, :l2, nothing))
+    local linf = esc(get_kwarg(args, :linf, nothing))
     local RealT_symbol = get_kwarg(args, :RealT, :Float64)
     RealT = getfield(@__MODULE__, RealT_symbol)
     atol_default = 500 * eps(RealT)
     rtol_default = sqrt(eps(RealT))
-    local atol = get_kwarg(args, :atol, atol_default)
-    local rtol = get_kwarg(args, :rtol, rtol_default)
+    local atol = esc(get_kwarg(args, :atol, atol_default))
+    local rtol = esc(get_kwarg(args, :rtol, rtol_default))
 
     local kwargs = Pair{Symbol, Any}[]
     for arg in args
@@ -85,12 +85,12 @@ macro test_trixi_include_base(elixir, args...)
     end
     local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
 
-    quote
+    ex = quote
         mpi_isroot() && println("═"^100)
-        mpi_isroot() && println($(esc(elixir)))
+        mpi_isroot() && println($elixir)
 
         # evaluate examples in the scope of the module they're called from
-        @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $kwargs...) $additional_ignore_content
+        @trixi_test_nowarn trixi_include(@__MODULE__, $elixir; $kwargs...) $additional_ignore_content
 
         # if present, compare l2 and linf errors against reference values
         if !isnothing($l2) || !isnothing($linf)
@@ -115,6 +115,7 @@ macro test_trixi_include_base(elixir, args...)
         mpi_isroot() && println("═"^100)
         mpi_isroot() && println("\n\n")
     end
+    return esc(ex)
 end
 
 """
@@ -158,7 +159,7 @@ macro trixi_testset(name, expr)
     # compatible with the dirty hack using `@eval` to get the mapping when
     # loading structured, curvilinear meshes. Thus, we need to use a plain
     # module name here.
-    quote
+    ex = quote
         local time_start = time_ns()
         @eval module TrixiTestModule
         using Test
@@ -194,6 +195,7 @@ macro trixi_testset(name, expr)
         end
         nothing
     end
+    return esc(ex)
 end
 
 """
