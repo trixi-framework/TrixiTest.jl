@@ -93,9 +93,8 @@ macro test_trixi_include_base(elixir, args...)
         mpi_isroot() && println($elixir)
 
         local kwargs = Pair{Symbol, Any}[]
-        # splatting interpolation for values: all expressions become values
-        for (key, value) in zip($keys, $(values...))
-            push!(kwargs, Pair(key, value))
+        for (index, key) in enumerate($keys)
+            push!(kwargs, Pair(key, $values[index]))
         end
 
         # evaluate examples in the scope of the module they're called from
