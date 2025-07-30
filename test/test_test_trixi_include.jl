@@ -2,9 +2,10 @@ macro test_trixi_include(expr, args...)
     local add_to_additional_ignore_content = [r"┌ Warning: Test warning\n└ @ .+\n"]
     args = append_to_kwargs(args, :additional_ignore_content,
                             add_to_additional_ignore_content)
-    quote
-        @test_trixi_include_base($(esc(expr)), $(args...))
+    ex = quote
+        @test_trixi_include_base($expr, $(args...))
     end
+    return esc(ex)
 end
 
 @testset verbose=true "@test_trixi_include_base and @test_trixi_include" begin

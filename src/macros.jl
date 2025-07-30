@@ -57,7 +57,6 @@ as absolute/relative tolerance.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
-    local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
     local l2 = get_kwarg(args, :l2, nothing)
     local linf = get_kwarg(args, :linf, nothing)
     local RealT_symbol = get_kwarg(args, :RealT, :Float64)
@@ -75,20 +74,23 @@ macro test_trixi_include_base(elixir, args...)
         end
     end
 
-    quote
-        mpi_isroot() && println("═"^100)
-        mpi_isroot() && println($(esc(elixir)))
+    # if `maxiters` is set in tests, it is usually set to a small number to
+    # run only a few steps - ignore possible warnings coming from that
+    if any(==(:maxiters) ∘ first, kwargs)
+        args = append_to_kwargs(args, :additional_ignore_content,
+                                [
+                                    r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
+                                    r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n"
+                                ])
+    end
+    local additional_ignore_content = get_kwarg(args, :additional_ignore_content, Any[])
 
-        # if `maxiters` is set in tests, it is usually set to a small number to
-        # run only a few steps - ignore possible warnings coming from that
-        if any(==(:maxiters) ∘ first, $kwargs)
-            push!($additional_ignore_content,
-                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
-                  r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ Trixi .+\n")
-        end
+    ex = quote
+        mpi_isroot() && println("═"^100)
+        mpi_isroot() && println($elixir)
 
         # evaluate examples in the scope of the module they're called from
-        @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $kwargs...) $additional_ignore_content
+        @trixi_test_nowarn trixi_include(@__MODULE__, $elixir; $kwargs...) $additional_ignore_content
 
         # if present, compare l2 and linf errors against reference values
         if !isnothing($l2) || !isnothing($linf)
@@ -113,6 +115,7 @@ macro test_trixi_include_base(elixir, args...)
         mpi_isroot() && println("═"^100)
         mpi_isroot() && println("\n\n")
     end
+    return esc(ex)
 end
 
 """
@@ -123,7 +126,7 @@ after execution.
 """
 macro timed_testset(name, expr)
     @assert name isa String
-    quote
+    out = quote
         local time_start = time_ns()
         @testset $name $expr
         local time_stop = time_ns()
@@ -134,6 +137,7 @@ macro timed_testset(name, expr)
             flush(stdout)
         end
     end
+    return esc(out)
 end
 
 """
@@ -155,7 +159,7 @@ macro trixi_testset(name, expr)
     # compatible with the dirty hack using `@eval` to get the mapping when
     # loading structured, curvilinear meshes. Thus, we need to use a plain
     # module name here.
-    quote
+    ex = quote
         local time_start = time_ns()
         @eval module TrixiTestModule
         using Test
@@ -191,6 +195,7 @@ macro trixi_testset(name, expr)
         end
         nothing
     end
+    return esc(ex)
 end
 
 """
