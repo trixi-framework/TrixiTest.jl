@@ -1,7 +1,6 @@
 module TrixiTest
 
-using Test: @inferred, @test, @test_broken, @test_deprecated, @test_logs,
-            @test_nowarn, @test_skip, @test_throws, @test_warn, @testset
+using Test
 using TrixiBase: mpi_isroot, trixi_include
 
 include("auxiliary.jl")
