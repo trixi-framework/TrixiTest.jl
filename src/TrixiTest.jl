@@ -1,6 +1,6 @@
 module TrixiTest
 
-using Test: @test, @testset
+using Test
 using TrixiBase: mpi_isroot, trixi_include
 
 include("auxiliary.jl")
