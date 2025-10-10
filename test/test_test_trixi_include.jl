@@ -20,21 +20,45 @@ end
 
             # just include
             @test_trixi_include_base(path)
-            @test @isdefined x
-            @test x == 4
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 4
+            else
+                @test @isdefined x
+                @test x == 4
+            end
 
             @test_trixi_include(path)
-            @test @isdefined x
-            @test x == 4
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 4
+            else
+                @test @isdefined x
+                @test x == 4
+            end
 
             # include and overwrite included variable by a constant
             @test_trixi_include_base(path, x=9)
-            @test @isdefined x
-            @test x == 9
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 9
+            else
+                @test @isdefined x
+                @test x == 9
+            end
 
             @test_trixi_include(path, x=9)
-            @test @isdefined x
-            @test x == 9
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 9
+            else
+                @test @isdefined x
+                @test x == 9
+            end
         end
     end
 
@@ -51,30 +75,66 @@ end
             # overwrite included variable by a (global) variable
             global override = 5
             @test_trixi_include_base(path, x=override)
-            @test @isdefined x
-            @test x == 5
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 5
+            else
+                @test @isdefined x
+                @test x == 5
+            end
 
             @test_trixi_include(path, x=override)
-            @test @isdefined x
-            @test x == 5
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 5
+            else
+                @test @isdefined x
+                @test x == 5
+            end
 
             # overwrite included variable by another included variables
             @test_trixi_include_base(path, x=seed)
-            @test @isdefined x
-            @test x == 42
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 42
+            else
+                @test @isdefined x
+                @test x == 42
+            end
 
             @test_trixi_include(path, x=seed)
-            @test @isdefined x
-            @test x == 42
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 42
+            else
+                @test @isdefined x
+                @test x == 42
+            end
 
             # overwrite included variable by supplied variable
             @test_trixi_include_base(path, seed=6, x=seed)
-            @test @isdefined x
-            @test x == 6
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 6
+            else
+                @test @isdefined x
+                @test x == 6
+            end
 
             @test_trixi_include(path, seed=6, x=seed)
-            @test @isdefined x
-            @test x == 6
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :x)
+                @test (@invokelatest mod.x) == 6
+            else
+                @test @isdefined x
+                @test x == 6
+            end
         end
     end
 
