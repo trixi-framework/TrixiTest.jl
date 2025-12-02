@@ -43,17 +43,25 @@ end
 
 """
     @test_trixi_include_base(elixir; additional_ignore_content = Any[],
-                                     l2=nothing, linf=nothing, RealT=Float64,
-                                     atol=500*eps(RealT), rtol=sqrt(eps(RealT)),
+                                     l2 = nothing, linf = nothing,
+                                     RealT_for_test_tolerances = Float64,
+                                     atol = 500 * eps(RealT_for_test_tolerances),
+                                     rtol = sqrt(eps(RealT_for_test_tolerances)),
                                      parameters...)
 
 Test an `elixir` file by calling `trixi_include(elixir; parameters...)`.
+
 The `additional_ignore_content` argument is passed to [`@trixi_test_nowarn`](@ref)
 and can be used to ignore additional patterns in the `stderr` output.
 By default, only the absence of error output is checked.
+
 If `l2` or `linf` are specified, in addition the resulting L2/Linf errors
 are compared approximately against these reference values, using `atol, rtol`
 as absolute/relative tolerance.
+
+The keyword arguments `additional_ignore_content`, `l2`, `linf`,
+`RealT_for_test_tolerances`, `atol`, and `rtol` are not passed to
+`trixi_include(elixir; parameters...)`.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
@@ -69,7 +77,8 @@ macro test_trixi_include_base(elixir, args...)
     local kwargs = Pair{Symbol, Any}[]
     for arg in args
         if (arg.head == :(=) &&
-            !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT, :atol, :rtol)))
+            !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
+                              :RealT_for_test_tolerances, :atol, :rtol)))
             push!(kwargs, Pair(arg.args...))
         end
     end
