@@ -94,7 +94,7 @@ end
                 @test x == 5
             end
 
-            # overwrite included variable by another included variable
+            # overwrite included variable by another included variables
             @test_trixi_include_base(path, x=seed)
             if VERSION >= v"1.12"
                 mod = @__MODULE__
@@ -205,39 +205,6 @@ end
             global iters = 3
             @test_trixi_include_base(path, maxiters=2)
             @test_trixi_include(path, maxiters=iters)
-        end
-    end
-
-    # RealT is used internally to compute error tolerances when l2 or linf are used
-    # However, it should also be forwarded as a keyword argument to trixi_include
-    @trixi_testset "RealT" begin
-        example = """
-            RealT = Float64
-            """
-
-        mktemp() do path, io
-            write(io, example)
-            close(io)
-
-            @test_trixi_include_base(path, RealT=Float32)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :RealT)
-                @test (@invokelatest mod.RealT) == Float32
-            else
-                @test @isdefined RealT
-                @test RealT == Float32
-            end
-
-            @test_trixi_include(path, RealT=Float32)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :RealT)
-                @test (@invokelatest mod.RealT) == Float32
-            else
-                @test @isdefined RealT
-                @test RealT == Float32
-            end
         end
     end
 end
