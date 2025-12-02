@@ -1,7 +1,7 @@
 name = "TrixiTest"
 uuid = "0a316866-cbd0-4425-8bcb-08103b2c1f26"
 authors = ["Joshua Lampert <joshua.lampert@uni-hamburg.de>"]
-version = "0.1.7-DEV"
+version = "0.1.7"
 
 [deps]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
