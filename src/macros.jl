@@ -77,7 +77,8 @@ macro test_trixi_include_base(elixir, args...)
     local kwargs = Pair{Symbol, Any}[]
     for arg in args
         if (arg.head == :(=) &&
-            !(arg.args[1] in (:additional_ignore_content, :l2, :linf, :RealT_for_test_tolerances, :atol, :rtol)))
+            !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
+                              :RealT_for_test_tolerances, :atol, :rtol)))
             push!(kwargs, Pair(arg.args...))
         end
     end
