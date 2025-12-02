@@ -44,8 +44,9 @@ end
 """
     @test_trixi_include_base(elixir; additional_ignore_content = Any[],
                                      l2 = nothing, linf = nothing,
-                                     RealT = Float64,
-                                     atol = 500 * eps(RealT), rtol = sqrt(eps(RealT)),
+                                     RealT_for_test_tolerances = Float64,
+                                     atol = 500 * eps(RealT_for_test_tolerances),
+                                     rtol = sqrt(eps(RealT_for_test_tolerances)),
                                      parameters...)
 
 Test an `elixir` file by calling `trixi_include(elixir; parameters...)`.
@@ -58,9 +59,9 @@ If `l2` or `linf` are specified, in addition the resulting L2/Linf errors
 are compared approximately against these reference values, using `atol, rtol`
 as absolute/relative tolerance.
 
-While the arguments `additional_ignore_content`, `l2`, `linf`, `atol`, and `rtol`
-are not passed to `trixi_include(elixir; parameters...)`, the keyword argument 
-`RealT` (if specified explicitly) is passed to `trixi_include` as well.
+The keyword arguments `additional_ignore_content`, `l2`, `linf`,
+`RealT_for_test_tolerances`, `atol`, and `rtol` are not passed to
+`trixi_include(elixir; parameters...)`.
 """
 macro test_trixi_include_base(elixir, args...)
     # Note: The variables below are just Symbols, not actual errors/types
