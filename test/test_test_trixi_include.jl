@@ -193,6 +193,24 @@ end
         end
     end
 
+    @trixi_testset "l2 and linf with RealT_for_test_tolerances" begin
+        example = """
+            function analysis_callback(sol)
+            @show sol
+            return sol[1], sol[2]
+            end
+            sol = [1.2345678901234567, 7.6543210987654321]
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include_base(path, l2=1.2345, linf=7.6543,
+                                     RealT_for_test_tolerances=Float32)
+        end
+    end
+
     @trixi_testset "maxiters" begin
         example = """
             maxiters = 4
@@ -208,8 +226,6 @@ end
         end
     end
 
-    # RealT is used internally to compute error tolerances when l2 or linf are used
-    # However, it should also be forwarded as a keyword argument to trixi_include
     @trixi_testset "RealT" begin
         example = """
             RealT = Float64
