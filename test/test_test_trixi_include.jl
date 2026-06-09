@@ -138,6 +138,39 @@ end
         end
     end
 
+    @trixi_testset "locally defined override" begin
+        example = """
+            baz = 42
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            # overwrite included variable by a locally defined value (not a module global)
+            local_baz = 7
+            @test_trixi_include_base(path, baz=local_baz)
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :baz)
+                @test (@invokelatest mod.baz) == 7
+            else
+                @test @isdefined baz
+                @test baz == 7
+            end
+
+            @test_trixi_include(path, baz=local_baz)
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test @invokelatest isdefined(mod, :baz)
+                @test (@invokelatest mod.baz) == 7
+            else
+                @test @isdefined baz
+                @test baz == 7
+            end
+        end
+    end
+
     @trixi_testset "additional_ignore_content" begin
         example = """
             @warn "Test warning"
