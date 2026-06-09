@@ -78,7 +78,7 @@ macro test_trixi_include_base(elixir, args...)
     #   1. Symbol is also a key in this kwarg list (e.g. `seed=6, x=seed`): always pass
     #      as Symbol so trixi_include resolves it inside the elixir after the other
     #      override (seed=6) has been applied.
-    #   2. Locally-defined values (e.g. `baz_override` defined in the testset body):
+    #   2. Locally-defined values defined in the testset body:
     #      @isdefined returns true (same world age), so the actual value is passed.
     #   3. Elixir-internal variable references (e.g. bare `x=seed` with no seed= key):
     #      on Julia >= 1.12, @isdefined returns false because bindings set inside
