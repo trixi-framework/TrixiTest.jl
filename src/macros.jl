@@ -74,15 +74,21 @@ macro test_trixi_include_base(elixir, args...)
     local atol = get_kwarg(args, :atol, atol_default)
     local rtol = get_kwarg(args, :rtol, rtol_default)
 
-    # Build escaped kwarg expressions. For bare-symbol values, we use @isdefined at
-    # runtime to dispatch between two cases:
-    #   - Locally-defined values (e.g. `baz_override`): @isdefined returns true (same
-    #     world age), so the actual value is evaluated and passed to trixi_include.
-    #   - Elixir-internal variable references: @isdefined
-    #     returns false because bindings set inside Base.include have a newer world age
-    #     and are invisible to the compiled testset closure. The Symbol is passed instead,
-    #     so trixi_include can embed it as a variable reference resolved inside the elixir.
+    # Build escaped kwarg expressions. For bare-symbol values there are three cases:
+    #   1. Symbol is also a key in this kwarg list (e.g. `seed=6, x=seed`): always pass
+    #      as Symbol so trixi_include resolves it inside the elixir after the other
+    #      override (seed=6) has been applied.
+    #   2. Locally-defined values (e.g. `baz_override` defined in the testset body):
+    #      @isdefined returns true (same world age), so the actual value is passed.
+    #   3. Elixir-internal variable references (e.g. bare `x=seed` with no seed= key):
+    #      on Julia >= 1.12, @isdefined returns false because bindings set inside
+    #      Base.include have a newer world age; on older Julia the value is visible and
+    #      also correct (same as the elixir default).
     # For non-Symbol expressions (closures, calls, literals), always evaluate at call site.
+    local kwarg_keys = Set(arg.args[1] for arg in args
+                           if arg.head == :(=) &&
+                              !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
+                                                :RealT_for_test_tolerances, :atol, :rtol)))
     local kwarg_exprs = Expr[]
     for arg in args
         if (arg.head == :(=) &&
@@ -90,7 +96,12 @@ macro test_trixi_include_base(elixir, args...)
                               :RealT_for_test_tolerances, :atol, :rtol)))
             key = arg.args[1]
             val = arg.args[2]
-            if val isa Symbol
+            if val isa Symbol && val in kwarg_keys
+                # Case 1: chained override — pass as Symbol for elixir-internal resolution
+                push!(kwarg_exprs, Expr(:kw, key, QuoteNode(val)))
+            elseif val isa Symbol
+                # Cases 2 & 3: use @isdefined to capture locally-defined values while
+                # falling back to Symbol for elixir-internal references
                 push!(kwarg_exprs,
                       Expr(:kw, key,
                            esc(:((@isdefined $val) ? $val : $(QuoteNode(val))))))
