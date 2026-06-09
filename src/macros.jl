@@ -85,7 +85,8 @@ macro test_trixi_include_base(elixir, args...)
     #      Base.include have a newer world age; on older Julia the value is visible and
     #      also correct (same as the elixir default).
     # For non-Symbol expressions (closures, calls, literals), always evaluate at call site.
-    local kwarg_keys = Set(arg.args[1] for arg in args
+    local kwarg_keys = Set(arg.args[1]
+                           for arg in args
                            if arg.head == :(=) &&
                               !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
                                                 :RealT_for_test_tolerances, :atol, :rtol)))
