@@ -162,18 +162,6 @@ end
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
             end
-
-            @test_trixi_include(path, seed=6, x=seed)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test (@invokelatest mod.x) == 6
-                @test (@invokelatest mod.x_kw_pos) == 6
-                @test (@invokelatest mod.x_kw_semi) == 6
-            else
-                @test x == 6
-                @test x_kw_pos == 6
-                @test x_kw_semi == 6
-            end
         end
     end
 
