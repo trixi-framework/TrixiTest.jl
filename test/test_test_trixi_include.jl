@@ -138,6 +138,32 @@ end
         end
     end
 
+    @trixi_testset "normal override, all assignment forms" begin
+        example = """
+            f(; x = 0) = x
+            x = 1
+            x_kw_pos  = f(x = 1)
+            x_kw_semi = f(; x = 1)
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include_base(path, x=6)
+            if VERSION >= v"1.12"
+                mod = @__MODULE__
+                @test (@invokelatest mod.x) == 6
+                @test (@invokelatest mod.x_kw_pos) == 6
+                @test (@invokelatest mod.x_kw_semi) == 6
+            else
+                @test x == 6
+                @test x_kw_pos == 6
+                @test x_kw_semi == 6
+            end
+        end
+    end
+
     @trixi_testset "chained override, all assignment forms" begin
         example = """
             seed = 42
@@ -165,9 +191,12 @@ end
         end
     end
 
-    @trixi_testset "locally defined override" begin
+    @trixi_testset "locally defined override, all assignment forms" begin
         example = """
-            baz = 42
+            f(; x = 0) = x
+            x = 1
+            x_kw_pos  = f(x = 1)
+            x_kw_semi = f(; x = 1)
             """
 
         mktemp() do path, io
@@ -175,25 +204,17 @@ end
             close(io)
 
             # overwrite included variable by a locally defined value (not a module global)
-            local_baz = 7
-            @test_trixi_include_base(path, baz=local_baz)
+            local_x = 6
+            @test_trixi_include_base(path, x=local_x)
             if VERSION >= v"1.12"
                 mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :baz)
-                @test (@invokelatest mod.baz) == 7
+                @test (@invokelatest mod.x) == 6
+                @test (@invokelatest mod.x_kw_pos) == 6
+                @test (@invokelatest mod.x_kw_semi) == 6
             else
-                @test @isdefined baz
-                @test baz == 7
-            end
-
-            @test_trixi_include(path, baz=local_baz)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :baz)
-                @test (@invokelatest mod.baz) == 7
-            else
-                @test @isdefined baz
-                @test baz == 7
+                @test x == 6
+                @test x_kw_pos == 6
+                @test x_kw_semi == 6
             end
         end
     end
