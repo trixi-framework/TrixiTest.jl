@@ -139,8 +139,8 @@ end
     end
 
     @trixi_testset "normal override, all assignment forms" begin
+        global f(; x = 0) = x
         example = """
-            f(; x = 0) = x
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
@@ -165,9 +165,9 @@ end
     end
 
     @trixi_testset "chained override, all assignment forms" begin
+        global f(; x = 0) = x
         example = """
             seed = 42
-            f(; x = 0) = x
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
@@ -192,8 +192,8 @@ end
     end
 
     @trixi_testset "locally defined override, all assignment forms" begin
+        global f(; x = 0) = x
         example = """
-            f(; x = 0) = x
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
