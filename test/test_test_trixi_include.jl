@@ -158,7 +158,7 @@ end
                 @test (@invokelatest mod.x_kw_pos) == 6
                 @test (@invokelatest mod.x_kw_semi) == 6
             else
-                @test x_regular == 6
+                @test x == 6
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
             end
@@ -170,7 +170,7 @@ end
                 @test (@invokelatest mod.x_kw_pos) == 6
                 @test (@invokelatest mod.x_kw_semi) == 6
             else
-                @test x_regular == 6
+                @test x == 6
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
             end
