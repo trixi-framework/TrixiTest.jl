@@ -144,6 +144,11 @@ end
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
+            end
+            y_g = g()
             """
 
         mktemp() do path, io
@@ -156,10 +161,14 @@ end
                 @test (@invokelatest mod.x) == 6
                 @test (@invokelatest mod.x_kw_pos) == 6
                 @test (@invokelatest mod.x_kw_semi) == 6
+                @test (@invokelatest mod.y).x == 6
+                @test (@invokelatest mod.y_g) == 6
             else
                 @test x == 6
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
+                @test y.x == 6
+                @test y_g == 6
             end
         end
     end
@@ -171,6 +180,11 @@ end
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
+            end
+            y_g = g()
             """
 
         mktemp() do path, io
@@ -183,10 +197,14 @@ end
                 @test (@invokelatest mod.x) == 6
                 @test (@invokelatest mod.x_kw_pos) == 6
                 @test (@invokelatest mod.x_kw_semi) == 6
+                @test (@invokelatest mod.y).x == 6
+                @test (@invokelatest mod.y_g) == 6
             else
                 @test x == 6
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
+                @test y.x == 6
+                @test y_g == 6
             end
         end
     end
@@ -197,6 +215,11 @@ end
             x = 1
             x_kw_pos  = f(x = 1)
             x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
+            end
+            y_g = g()
             """
 
         mktemp() do path, io
@@ -211,10 +234,14 @@ end
                 @test (@invokelatest mod.x) == 6
                 @test (@invokelatest mod.x_kw_pos) == 6
                 @test (@invokelatest mod.x_kw_semi) == 6
+                @test (@invokelatest mod.y).x == 6
+                @test (@invokelatest mod.y_g) == 6
             else
                 @test x == 6
                 @test x_kw_pos == 6
                 @test x_kw_semi == 6
+                @test y.x == 6
+                @test y_g == 6
             end
         end
     end
