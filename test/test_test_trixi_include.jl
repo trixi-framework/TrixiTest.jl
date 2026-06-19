@@ -20,45 +20,25 @@ end
 
             # just include
             @test_trixi_include_base(path)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 4
-            else
-                @test @isdefined x
-                @test x == 4
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 4
 
             @test_trixi_include(path)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 4
-            else
-                @test @isdefined x
-                @test x == 4
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 4
 
             # include and overwrite included variable by a constant
             @test_trixi_include_base(path, x=9)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 9
-            else
-                @test @isdefined x
-                @test x == 9
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 9
 
             @test_trixi_include(path, x=9)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 9
-            else
-                @test @isdefined x
-                @test x == 9
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 9
         end
     end
 
@@ -75,66 +55,159 @@ end
             # overwrite included variable by a (global) variable
             global override = 5
             @test_trixi_include_base(path, x=override)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 5
-            else
-                @test @isdefined x
-                @test x == 5
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 5
 
             @test_trixi_include(path, x=override)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 5
-            else
-                @test @isdefined x
-                @test x == 5
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 5
 
             # overwrite included variable by another included variable
             @test_trixi_include_base(path, x=seed)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 42
-            else
-                @test @isdefined x
-                @test x == 42
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 42
 
             @test_trixi_include(path, x=seed)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 42
-            else
-                @test @isdefined x
-                @test x == 42
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 42
 
             # overwrite included variable by supplied variable
             @test_trixi_include_base(path, seed=6, x=seed)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 6
-            else
-                @test @isdefined x
-                @test x == 6
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 6
 
             @test_trixi_include(path, seed=6, x=seed)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :x)
-                @test (@invokelatest mod.x) == 6
-            else
-                @test @isdefined x
-                @test x == 6
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :x)
+            @test (@invokelatest mod.x) == 6
+        end
+    end
+
+    @trixi_testset "normal override, all assignment forms" begin
+        global f(; x = 0) = x
+        example = """
+            x = 1
+            x_kw_pos  = f(x = 1)
+            x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
             end
+            y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include_base(path, x=6)
+            mod = @__MODULE__
+            @test (@invokelatest mod.x) == 6
+            @test (@invokelatest mod.x_kw_pos) == 6
+            @test (@invokelatest mod.x_kw_semi) == 6
+            @test (@invokelatest mod.y).x == 6
+            @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
+        end
+    end
+
+    @trixi_testset "chained override, all assignment forms" begin
+        global f(; x = 0) = x
+        example = """
+            seed = 42
+            x = 1
+            x_kw_pos  = f(x = 1)
+            x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
+            end
+            y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include_base(path, seed=6, x=seed)
+            mod = @__MODULE__
+            @test (@invokelatest mod.x) == 6
+            @test (@invokelatest mod.x_kw_pos) == 6
+            @test (@invokelatest mod.x_kw_semi) == 6
+            @test (@invokelatest mod.y).x == 6
+            @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
+        end
+    end
+
+    @trixi_testset "locally defined override, all assignment forms" begin
+        global f(; x = 0) = x
+        example = """
+            x = 1
+            x_kw_pos  = f(x = 1)
+            x_kw_semi = f(; x = 1)
+            y = (; x = 1)
+            function g(; x = 1)
+                return x
+            end
+            y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            # overwrite included variable by a locally defined value (not a module global)
+            local_x = 6
+            @test_trixi_include_base(path, x=local_x)
+            mod = @__MODULE__
+            @test (@invokelatest mod.x) == 6
+            @test (@invokelatest mod.x_kw_pos) == 6
+            @test (@invokelatest mod.x_kw_semi) == 6
+            @test (@invokelatest mod.y).x == 6
+            @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
         end
     end
 
@@ -236,24 +309,14 @@ end
             close(io)
 
             @test_trixi_include_base(path, RealT=Float32)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :RealT)
-                @test (@invokelatest mod.RealT) == Float32
-            else
-                @test @isdefined RealT
-                @test RealT == Float32
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :RealT)
+            @test (@invokelatest mod.RealT) == Float32
 
             @test_trixi_include(path, RealT=Float32)
-            if VERSION >= v"1.12"
-                mod = @__MODULE__
-                @test @invokelatest isdefined(mod, :RealT)
-                @test (@invokelatest mod.RealT) == Float32
-            else
-                @test @isdefined RealT
-                @test RealT == Float32
-            end
+            mod = @__MODULE__
+            @test @invokelatest isdefined(mod, :RealT)
+            @test (@invokelatest mod.RealT) == Float32
         end
     end
 end
