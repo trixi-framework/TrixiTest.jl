@@ -99,6 +99,16 @@ end
                 return x
             end
             y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
             """
 
         mktemp() do path, io
@@ -112,6 +122,9 @@ end
             @test (@invokelatest mod.x_kw_semi) == 6
             @test (@invokelatest mod.y).x == 6
             @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
         end
     end
 
@@ -127,6 +140,16 @@ end
                 return x
             end
             y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
             """
 
         mktemp() do path, io
@@ -140,6 +163,9 @@ end
             @test (@invokelatest mod.x_kw_semi) == 6
             @test (@invokelatest mod.y).x == 6
             @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
         end
     end
 
@@ -154,6 +180,16 @@ end
                 return x
             end
             y_g = g()
+            function h(x = 1)
+                return x
+            end
+            y_h = h()
+            y_let = 0
+            y_let_global = 0
+            let x = 1
+                y_let = x
+                global y_let_global = x
+            end
             """
 
         mktemp() do path, io
@@ -169,6 +205,9 @@ end
             @test (@invokelatest mod.x_kw_semi) == 6
             @test (@invokelatest mod.y).x == 6
             @test (@invokelatest mod.y_g) == 6
+            @test (@invokelatest mod.y_h) == 6
+            @test (@invokelatest mod.y_let) == 0 # let block introduces a local scope
+            @test (@invokelatest mod.y_let_global) == 6
         end
     end
 
