@@ -211,6 +211,67 @@ end
         end
     end
 
+    @trixi_testset "compound (non-Symbol) override values" begin
+        # Regression test for a bug where compound kwarg values (e.g. function
+        # calls) were evaluated in the testset module from which the macro is
+        # called instead of in the elixir's scope. This broke values referencing
+        # names that are only available *inside* the elixir, such as
+        # `surface_flux=FluxLaxFriedrichs(max_abs_speed)` in Trixi.jl, where
+        # `FluxLaxFriedrichs` and `max_abs_speed` come from the elixir's own
+        # `using Trixi` and are not defined in the (inner) testset module.
+        #
+        # We mimic this here with `norm` from `LinearAlgebra`: the elixir brings
+        # it in via its own `using LinearAlgebra`, while the testset module from
+        # which the macros are called below does *not* have `LinearAlgebra` (and
+        # `norm` is therefore not defined there).
+        example = """
+            using LinearAlgebra
+            x = norm([3.0, 4.0])
+            t = (1, 2)
+            s = "default"
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+            mod = @__MODULE__
+
+            # `norm` is intentionally not available in this testset module, so
+            # evaluating the override value here (instead of in the elixir's
+            # scope) would throw an `UndefVarError`.
+            @test !(@invokelatest isdefined(mod, :norm))
+
+            # Compound call expression referencing an elixir-internal name
+            @test_trixi_include_base(path, x=norm([6.0, 8.0]))
+            @test (@invokelatest mod.x) ≈ 10.0
+
+            @test_trixi_include(path, x=norm([6.0, 8.0]))
+            @test (@invokelatest mod.x) ≈ 10.0
+
+            # Tuple expression
+            @test_trixi_include_base(path, t=(3, 4))
+            @test (@invokelatest mod.t) == (3, 4)
+
+            @test_trixi_include(path, t=(3, 4))
+            @test (@invokelatest mod.t) == (3, 4)
+
+            # String literal
+            @test_trixi_include_base(path, s="override")
+            @test (@invokelatest mod.s) == "override"
+
+            # Numeric literal still works through the same code path
+            @test_trixi_include_base(path, x=7)
+            @test (@invokelatest mod.x) == 7
+
+            # Combining a compound override with a chained Symbol override:
+            # `t=(x, x)` must be resolved in the elixir's scope *after* the
+            # `x` override has been applied there.
+            @test_trixi_include_base(path, x=norm([5.0, 12.0]), t=(x, x))
+            @test (@invokelatest mod.x) ≈ 13.0
+            @test all((@invokelatest mod.t) .≈ (13.0, 13.0))
+        end
+    end
+
     @trixi_testset "additional_ignore_content" begin
         example = """
             @warn "Test warning"
