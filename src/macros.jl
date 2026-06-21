@@ -84,7 +84,19 @@ macro test_trixi_include_base(elixir, args...)
     #      on Julia >= 1.12, @isdefined returns false because bindings set inside
     #      Base.include have a newer world age; on older Julia the value is visible and
     #      also correct (same as the elixir default).
-    # For non-Symbol expressions (closures, calls, literals), always evaluate at call site.
+    # For non-Symbol expressions, there are two cases:
+    #   4. Literals (numbers, strings, ...): the value is the same regardless of the
+    #      scope, so we can simply pass it on.
+    #   5. Compound expressions (calls, tuples, array/closure literals, e.g.
+    #      `surface_flux=FluxLaxFriedrichs(max_abs_speed)`): these typically reference
+    #      names that are only available *inside* the elixir's scope (e.g. brought in by
+    #      the elixir's own `using Trixi`) and are not defined at the macro call site
+    #      (the testset module). Hence, we must NOT evaluate them at the call site but
+    #      pass the unevaluated expression through to `trixi_include`, which splices it
+    #      into the elixir and evaluates it in the elixir's scope.
+    # We achieve both of the above by passing the (quoted) expression on unevaluated via
+    # a `QuoteNode`, which reproduces the behavior before locally-defined Symbol values
+    # were supported.
     local kwarg_keys = Set(arg.args[1]
                            for arg in args
                            if arg.head == :(=) &&
@@ -107,7 +119,9 @@ macro test_trixi_include_base(elixir, args...)
                       Expr(:kw, key,
                            esc(:((@isdefined $val) ? $val : $(QuoteNode(val))))))
             else
-                push!(kwarg_exprs, Expr(:kw, key, esc(val)))
+                # Cases 4 & 5: pass the unevaluated expression through to
+                # `trixi_include` for resolution in the elixir's scope
+                push!(kwarg_exprs, Expr(:kw, key, QuoteNode(val)))
             end
         end
     end
