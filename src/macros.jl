@@ -159,14 +159,16 @@ macro test_trixi_include_base(elixir, args...)
             if mpi_isroot() && !isnothing(l2_ref)
                 @test length(l2_ref) == length(l2_measured)
                 for (l2_expected, l2_actual) in zip(l2_ref, l2_measured)
-                    @test isapprox(l2_expected, l2_actual, atol = atol_value, rtol = rtol_value)
+                    @test isapprox(l2_expected, l2_actual,
+                                   atol = atol_value, rtol = rtol_value)
                 end
             end
 
             if mpi_isroot() && !isnothing(linf_ref)
                 @test length(linf_ref) == length(linf_measured)
                 for (linf_expected, linf_actual) in zip(linf_ref, linf_measured)
-                    @test isapprox(linf_expected, linf_actual, atol = atol_value, rtol = rtol_value)
+                    @test isapprox(linf_expected, linf_actual,
+                                   atol = atol_value, rtol = rtol_value)
                 end
             end
         end
