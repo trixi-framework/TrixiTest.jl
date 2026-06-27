@@ -327,6 +327,40 @@ end
         end
     end
 
+    @trixi_testset "l2 and linf with DoubleFloats" begin
+        using DoubleFloats: Double64
+        example = """
+            function analysis_callback(sol)
+             return sol[1], sol[2]
+            end
+            sol = [1.0, 2.0]
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include(path, l2=Double64(1.0), linf=Double64(2.0))
+        end
+    end
+
+    @testset "l2 and linf with DoubleFloats and normal @testset" begin
+        using DoubleFloats: Double64
+        example = """
+            function analysis_callback(sol)
+             return sol[1], sol[2]
+            end
+            sol = [1.0, 2.0]
+            """
+
+        mktemp() do path, io
+            write(io, example)
+            close(io)
+
+            @test_trixi_include(path, l2=Double64(1.0), linf=Double64(2.0))
+        end
+    end
+
     @trixi_testset "l2 and linf with RealT_for_test_tolerances" begin
         example = """
             function analysis_callback(sol)
