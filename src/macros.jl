@@ -144,22 +144,29 @@ macro test_trixi_include_base(elixir, args...)
         # evaluate examples in the scope of the module they're called from
         @trixi_test_nowarn trixi_include(@__MODULE__, $(esc(elixir)); $(kwarg_exprs...)) $additional_ignore_content
 
-        # if present, compare l2 and linf errors against reference values
-        if !isnothing($l2) || !isnothing($linf)
+        # If present, compare l2 and linf errors against reference values.
+        # The reference values (and tolerances) are evaluated in the scope of the
+        # module the macro is called from, so that they may reference names that
+        # are only available there (e.g. `Double64` from a `using DoubleFloats`).
+        local l2_ref = $(esc(l2))
+        local linf_ref = $(esc(linf))
+        local atol_value = $(esc(atol))
+        local rtol_value = $(esc(rtol))
+        if !isnothing(l2_ref) || !isnothing(linf_ref)
             mod = @__MODULE__
             l2_measured, linf_measured = @invokelatest mod.analysis_callback(@invokelatest mod.sol)
 
-            if mpi_isroot() && !isnothing($l2)
-                @test length($l2) == length(l2_measured)
-                for (l2_expected, l2_actual) in zip($l2, l2_measured)
-                    @test isapprox(l2_expected, l2_actual, atol = $atol, rtol = $rtol)
+            if mpi_isroot() && !isnothing(l2_ref)
+                @test length(l2_ref) == length(l2_measured)
+                for (l2_expected, l2_actual) in zip(l2_ref, l2_measured)
+                    @test isapprox(l2_expected, l2_actual, atol = atol_value, rtol = rtol_value)
                 end
             end
 
-            if mpi_isroot() && !isnothing($linf)
-                @test length($linf) == length(linf_measured)
-                for (linf_expected, linf_actual) in zip($linf, linf_measured)
-                    @test isapprox(linf_expected, linf_actual, atol = $atol, rtol = $rtol)
+            if mpi_isroot() && !isnothing(linf_ref)
+                @test length(linf_ref) == length(linf_measured)
+                for (linf_expected, linf_actual) in zip(linf_ref, linf_measured)
+                    @test isapprox(linf_expected, linf_actual, atol = atol_value, rtol = rtol_value)
                 end
             end
         end
