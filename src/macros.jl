@@ -131,7 +131,7 @@ macro test_trixi_include_base(elixir, args...)
     if any(e -> e.args[1] == :maxiters, kwarg_exprs)
         args = append_to_kwargs(args, :additional_ignore_content,
                                 [
-                                    r"┌ Warning: Verbosity toggle: max_iters \n│  Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n",
+                                    r"┌ Warning: Verbosity toggle: max_iters \n│  Interrupted\. Larger maxiters is needed\..*\n└ @ (?:SciMLBase|DiffEqBase) .+\n",
                                     r"┌ Warning: Interrupted\. Larger maxiters is needed\..*\n└ @ SciMLBase .+\n"
                                 ])
     end
