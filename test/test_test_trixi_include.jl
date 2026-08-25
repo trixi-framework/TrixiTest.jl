@@ -272,6 +272,108 @@ end
         end
     end
 
+    # The following two testsets are regression tests for the failures observed in
+    # Trixi.jl's CI with TrixiBase.jl v0.1.11. There, bare-Symbol kwarg values were
+    # quoted before being spliced into the elixir, so that they ended up as `Symbol`
+    # *values* instead of references to the variables they name. Since
+    # `@test_trixi_include_base` passes elixir-internal names as bare `Symbol`s
+    # (case 3 in `src/macros.jl`), an override such as
+    #   @test_trixi_include_base(elixir, initial_condition=initial_condition_xyz)
+    # then assigned `initial_condition = :initial_condition_xyz` in the elixir.
+    # These tests do not depend on Trixi.jl and reproduce the two failure modes
+    # seen there (a `Symbol` used as a function and a `Symbol` used as a number).
+    #
+    # Note that the name used as the override value must be defined *only* inside
+    # the respective elixir and must not already be defined in the (fresh) testset
+    # module when the macro is expanded. Otherwise `@isdefined` succeeds on
+    # Julia < 1.12 and the value is passed instead of the `Symbol`, which does not
+    # exercise this code path. Hence the two examples per testset below use
+    # different names for the function/value used as the override.
+    @trixi_testset "elixir-internal Symbol override used as a function" begin
+        # Reproduces `MethodError: objects of type Symbol are not callable`.
+        # The two examples are included into the *same* testset module, so they must
+        # not define methods of the same function: that would emit a "Method
+        # definition ... overwritten" warning on `stderr`, which
+        # `@trixi_test_nowarn` (rightfully) reports as a failure. Hence the default
+        # is `identity` from `Base` and only the override targets are defined here.
+        example_base = """
+            initial_condition_base(x) = 2.0
+
+            initial_condition = identity
+            u0 = initial_condition(0.0)
+            """
+        example_wrapper = """
+            initial_condition_wrapper(x) = 3.0
+
+            initial_condition = identity
+            u0 = initial_condition(0.0)
+            """
+
+        mktemp() do path, io
+            write(io, example_base)
+            close(io)
+            mod = @__MODULE__
+
+            # The override value is only defined inside the elixir, so it has to be
+            # passed through to `trixi_include` as an unquoted `Symbol`.
+            @test !(@invokelatest isdefined(mod, :initial_condition_base))
+
+            @test_trixi_include_base(path, initial_condition=initial_condition_base)
+            @test (@invokelatest mod.u0) == 2.0
+        end
+
+        mktemp() do path, io
+            write(io, example_wrapper)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :initial_condition_wrapper))
+
+            @test_trixi_include(path, initial_condition=initial_condition_wrapper)
+            @test (@invokelatest mod.u0) == 3.0
+        end
+    end
+
+    @trixi_testset "elixir-internal Symbol override used as a number" begin
+        # Reproduces `MethodError: no method matching isless(::Symbol, ::Int64)`.
+        example_base = """
+            maxiters_base = 3
+
+            maxiters = 100
+            finished = 5 > maxiters
+            """
+        example_wrapper = """
+            maxiters_wrapper = 4
+
+            maxiters = 100
+            finished = 5 > maxiters
+            """
+
+        mktemp() do path, io
+            write(io, example_base)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :maxiters_base))
+
+            @test_trixi_include_base(path, maxiters=maxiters_base)
+            @test (@invokelatest mod.maxiters) == 3
+            @test (@invokelatest mod.finished) == true
+        end
+
+        mktemp() do path, io
+            write(io, example_wrapper)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :maxiters_wrapper))
+
+            @test_trixi_include(path, maxiters=maxiters_wrapper)
+            @test (@invokelatest mod.maxiters) == 4
+            @test (@invokelatest mod.finished) == true
+        end
+    end
+
     @trixi_testset "additional_ignore_content" begin
         example = """
             @warn "Test warning"

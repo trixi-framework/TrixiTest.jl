@@ -8,6 +8,7 @@ coverage/
 coverage_report/
 *.jl.*.cov
 .vscode/
+*.claude
 run
 
 .DS_Store
