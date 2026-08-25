@@ -85,6 +85,13 @@ end
             mod = @__MODULE__
             @test @invokelatest isdefined(mod, :x)
             @test (@invokelatest mod.x) == 6
+
+            # Symbols can still be passed as values explicitly
+            @test_trixi_include_base(path, x=:symbol)
+            @test (@invokelatest mod.x) === :symbol
+
+            @test_trixi_include(path, x=:symbol)
+            @test (@invokelatest mod.x) === :symbol
         end
     end
 
