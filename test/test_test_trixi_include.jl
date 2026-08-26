@@ -287,22 +287,7 @@ end
     # (case 3 in `src/macros.jl`), an override such as
     #   @test_trixi_include_base(elixir, initial_condition=initial_condition_xyz)
     # then assigned `initial_condition = :initial_condition_xyz` in the elixir.
-    # These tests do not depend on Trixi.jl and reproduce the two failure modes
-    # seen there (a `Symbol` used as a function and a `Symbol` used as a number).
-    #
-    # Note that the name used as the override value must be defined *only* inside
-    # the respective elixir and must not already be defined in the (fresh) testset
-    # module when the macro is expanded. Otherwise `@isdefined` succeeds on
-    # Julia < 1.12 and the value is passed instead of the `Symbol`, which does not
-    # exercise this code path. Hence the two examples per testset below use
-    # different names for the function/value used as the override.
     @trixi_testset "elixir-internal Symbol override used as a function" begin
-        # Reproduces `MethodError: objects of type Symbol are not callable`.
-        # The two examples are included into the *same* testset module, so they must
-        # not define methods of the same function: that would emit a "Method
-        # definition ... overwritten" warning on `stderr`, which
-        # `@trixi_test_nowarn` (rightfully) reports as a failure. Hence the default
-        # is `identity` from `Base` and only the override targets are defined here.
         example_base = """
             initial_condition_base(x) = 2.0
 
@@ -321,8 +306,6 @@ end
             close(io)
             mod = @__MODULE__
 
-            # The override value is only defined inside the elixir, so it has to be
-            # passed through to `trixi_include` as an unquoted `Symbol`.
             @test !(@invokelatest isdefined(mod, :initial_condition_base))
 
             @test_trixi_include_base(path, initial_condition=initial_condition_base)
@@ -342,7 +325,6 @@ end
     end
 
     @trixi_testset "elixir-internal Symbol override used as a number" begin
-        # Reproduces `MethodError: no method matching isless(::Symbol, ::Int64)`.
         example_base = """
             maxiters_base = 3
 
