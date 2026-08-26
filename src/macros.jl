@@ -74,63 +74,14 @@ macro test_trixi_include_base(elixir, args...)
     local atol = get_kwarg(args, :atol, atol_default)
     local rtol = get_kwarg(args, :rtol, rtol_default)
 
-    # Build escaped kwarg expressions. For bare-symbol values there are three cases:
-    #   1. Symbol is also a key in this kwarg list (e.g. `seed=6, x=seed`): pass an
-    #      expression so that trixi_include resolves it inside the elixir after the
-    #      other override (seed=6) has been applied.
-    #   2. Locally-defined values defined in the testset body:
-    #      @isdefined returns true (same world age), so the actual value is passed.
-    #   3. Elixir-internal variable references (e.g. bare `x=seed` with no seed= key):
-    #      on Julia >= 1.12, @isdefined returns false because bindings set inside
-    #      Base.include have a newer world age; on older Julia the value is visible and
-    #      also correct (same as the elixir default).
-    # Elixir-internal bare symbols are wrapped in a block expression. This preserves
-    # elixir-scope evaluation without passing a Symbol *value* to trixi_include, which
-    # treats a Symbol as a literal value.
-    # For non-Symbol expressions, there are two cases:
-    #   4. Literals (numbers, strings, quoted Symbols, ...): the value is the same
-    #      regardless of the scope, so we can simply pass it on. Note that a quoted
-    #      symbol literal such as `x=:foo` is parsed as a `QuoteNode`, not as a
-    #      `Symbol`, and hence lands here and is passed on as the value `:foo`.
-    #   5. Compound expressions (calls, tuples, array/closure literals, e.g.
-    #      `surface_flux=FluxLaxFriedrichs(max_abs_speed)`): these typically reference
-    #      names that are only available *inside* the elixir's scope (e.g. brought in by
-    #      the elixir's own `using Trixi`) and are not defined at the macro call site
-    #      (the testset module). Hence, we must NOT evaluate them at the call site but
-    #      pass the unevaluated expression through to `trixi_include`, which splices it
-    #      into the elixir and evaluates it in the elixir's scope.
-    # We achieve both of the above by passing the (quoted) expression on unevaluated via
-    # a `QuoteNode`.
-    local kwarg_keys = Set(arg.args[1]
-                           for arg in args
-                           if arg.head == :(=) &&
-                              !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
-                                                :RealT_for_test_tolerances, :atol, :rtol)))
-    local kwarg_exprs = Expr[]
-    for arg in args
-        if (arg.head == :(=) &&
-            !(arg.args[1] in (:additional_ignore_content, :l2, :linf,
-                              :RealT_for_test_tolerances, :atol, :rtol)))
-            key = arg.args[1]
-            val = arg.args[2]
-            if val isa Symbol && val in kwarg_keys
-                # Case 1: chained override — resolve the reference in the elixir
-                push!(kwarg_exprs, Expr(:kw, key, QuoteNode(Expr(:block, val))))
-            elseif val isa Symbol
-                # Cases 2 & 3: use @isdefined to capture locally-defined values while
-                # falling back to an expression that resolves elixir-internal references
-                # in the elixir
-                push!(kwarg_exprs,
-                      Expr(:kw, key,
-                           esc(:((@isdefined $val) ? $val :
-                                 $(QuoteNode(Expr(:block, val)))))))
-            else
-                # Cases 4 & 5: pass the unevaluated expression through to
-                # `trixi_include` for resolution in the elixir's scope
-                push!(kwarg_exprs, Expr(:kw, key, QuoteNode(val)))
-            end
-        end
-    end
+    # Build the kwarg expressions that are forwarded to `trixi_include`. The rules for
+    # this are shared with packages defining their own testing macros, see
+    # `trixi_include_kwargs`.
+    local kwarg_exprs = trixi_include_kwargs(args;
+                                             reserved = (:additional_ignore_content,
+                                                         :l2, :linf,
+                                                         :RealT_for_test_tolerances,
+                                                         :atol, :rtol))
 
     # if `maxiters` is set in tests, it is usually set to a small number to
     # run only a few steps - ignore possible warnings coming from that
