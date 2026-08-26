@@ -34,13 +34,15 @@ end
 
 Turn the arguments `args` of a testing macro (a tuple of `:(key = value)` expressions, as
 they are received by a macro) into a vector of `Expr(:kw, ...)` expressions that can be
-spliced into a `trixi_include` call inside the expression the macro returns:
+spliced into a `trixi_include` (from [TrixiBase.jl](https://github.com/trixi-framework/TrixiBase.jl))
+call inside the expression the macro returns:
 
 ```julia
 macro my_test_include(example, args...)
     local kwargs = trixi_include_kwargs(args; reserved = (:l2, :linf))
     quote
-        @trixi_test_nowarn trixi_include(@__MODULE__, \$example; \$(kwargs...))
+        @trixi_test_nowarn trixi_include(@__MODULE__, \$(esc(example)); \$(kwargs...))
+        # Use the values passed to the `reserved` arguments `l2` and `linf`.
     end
 end
 ```
