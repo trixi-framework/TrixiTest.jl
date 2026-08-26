@@ -85,6 +85,13 @@ end
             mod = @__MODULE__
             @test @invokelatest isdefined(mod, :x)
             @test (@invokelatest mod.x) == 6
+
+            # Symbols can still be passed as values explicitly
+            @test_trixi_include_base(path, x=:symbol)
+            @test (@invokelatest mod.x) === :symbol
+
+            @test_trixi_include(path, x=:symbol)
+            @test (@invokelatest mod.x) === :symbol
         end
     end
 
@@ -514,71 +521,6 @@ end
             mod = @__MODULE__
             @test @invokelatest isdefined(mod, :RealT)
             @test (@invokelatest mod.RealT) == Float32
-        end
-    end
-end
-
-
-# The macros above are not the only way `trixi_include` is used in downstream
-# packages: some of them define their own, ad-hoc test macros that hand the
-# unevaluated kwarg expressions straight to `trixi_include`, e.g.
-# `SummationByPartsOperatorsExtra.jl` in `test/test_util.jl`:
-#
-#     macro test_trixi_include(example, args...)
-#         local kwargs = Pair{Symbol, Any}[]
-#         for arg in args
-#             if arg.head == :(=)
-#                 push!(kwargs, Pair(arg.args...))
-#             end
-#         end
-#         quote
-#             @trixi_test_nowarn trixi_include(@__MODULE__, $example; $kwargs...)
-#         end
-#     end
-#
-# A bare identifier such as `xmin=xmin` therefore reaches `trixi_include` as the
-# `Symbol` `:xmin`, and is expected to be spliced into the elixir as a *variable
-# reference* that is resolved in the scope the elixir is included into. Since
-# `TrixiTest.jl` re-exports `trixi_include` and is run as a downstream test of
-# `TrixiBase.jl`, we pin down that contract here as well. It is not covered by
-# the testsets above, which go through `@test_trixi_include_base` and hence
-# never pass a bare `Symbol` to `trixi_include`.
-@testset verbose=true "trixi_include with bare Symbol values" begin
-    @trixi_testset "bare Symbol kwargs are resolved as variable references" begin
-        # Reproduces the failure of `SummationByPartsOperatorsExtra.jl` with
-        # TrixiBase.jl v0.1.11, where the `Symbol`s were quoted and thus ended up
-        # as `Symbol` *values* in the elixir:
-        #   MethodError: no method matching
-        #       (CoordRefSystems.Cartesian{CoordRefSystems.NoDatum})(::Tuple{Symbol, Symbol})
-        # from `Box((xmin, ymin), (xmax, ymax))` in `examples/RBF_MFSBP.jl`.
-        example = """
-            make_box(min::NTuple{2, Float64}, max::NTuple{2, Float64}) = (min, max)
-
-            xmin = -1.0
-            xmax = 1.0
-            ymin = -1.0
-            ymax = 1.0
-            geometry = make_box((xmin, ymin), (xmax, ymax))
-            """
-
-        mktemp() do path, io
-            write(io, example)
-            close(io)
-            mod = @__MODULE__
-
-            # The values the elixir-internal assignments are overwritten with are
-            # globals of the module the elixir is included into, exactly as in a
-            # `@testitem`/`@trixi_testset` body of a downstream package.
-            global xmin = -2.0
-            global xmax = 2.0
-            global ymin = -3.0
-            global ymax = 3.0
-
-            @trixi_test_nowarn trixi_include(mod, path;
-                                             xmin = :xmin, xmax = :xmax,
-                                             ymin = :ymin, ymax = :ymax)
-
-            @test (@invokelatest mod.geometry) == ((-2.0, -3.0), (2.0, 3.0))
         end
     end
 end
