@@ -85,11 +85,13 @@ macro test_trixi_include_base(elixir, args...)
     #      Base.include have a newer world age; on older Julia the value is visible and
     #      also correct (same as the elixir default).
     # Elixir-internal bare symbols are wrapped in a block expression. This preserves
-    # elixir-scope evaluation without passing a Symbol value to trixi_include, where a
-    # Symbol is correctly treated as a literal value.
+    # elixir-scope evaluation without passing a Symbol *value* to trixi_include, which
+    # treats a Symbol as a literal value.
     # For non-Symbol expressions, there are two cases:
     #   4. Literals (numbers, strings, quoted Symbols, ...): the value is the same
-    #      regardless of the scope, so we can simply pass it on.
+    #      regardless of the scope, so we can simply pass it on. Note that a quoted
+    #      symbol literal such as `x=:foo` is parsed as a `QuoteNode`, not as a
+    #      `Symbol`, and hence lands here and is passed on as the value `:foo`.
     #   5. Compound expressions (calls, tuples, array/closure literals, e.g.
     #      `surface_flux=FluxLaxFriedrichs(max_abs_speed)`): these typically reference
     #      names that are only available *inside* the elixir's scope (e.g. brought in by
@@ -98,8 +100,7 @@ macro test_trixi_include_base(elixir, args...)
     #      pass the unevaluated expression through to `trixi_include`, which splices it
     #      into the elixir and evaluates it in the elixir's scope.
     # We achieve both of the above by passing the (quoted) expression on unevaluated via
-    # a `QuoteNode`. Quoted Symbol literals are already represented by a `QuoteNode` and
-    # are escaped directly to avoid passing the `QuoteNode` itself as the value.
+    # a `QuoteNode`.
     local kwarg_keys = Set(arg.args[1]
                            for arg in args
                            if arg.head == :(=) &&
@@ -121,12 +122,11 @@ macro test_trixi_include_base(elixir, args...)
                 # in the elixir
                 push!(kwarg_exprs,
                       Expr(:kw, key,
-                           esc(:((@isdefined $val) ? $val : $(QuoteNode(Expr(:block, val)))))))
-            elseif val isa QuoteNode
-                # Case 4: pass quoted literals, such as `:symbol`, as their values
-                push!(kwarg_exprs, Expr(:kw, key, esc(val)))
+                           esc(:((@isdefined $val) ? $val :
+                                 $(QuoteNode(Expr(:block, val)))))))
             else
-                # Cases 4 & 5: pass literals and compound expressions unevaluated
+                # Cases 4 & 5: pass the unevaluated expression through to
+                # `trixi_include` for resolution in the elixir's scope
                 push!(kwarg_exprs, Expr(:kw, key, QuoteNode(val)))
             end
         end
