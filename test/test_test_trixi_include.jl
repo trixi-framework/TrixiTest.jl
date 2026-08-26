@@ -279,6 +279,90 @@ end
         end
     end
 
+    # The following two testsets are regression tests for the failures observed in
+    # Trixi.jl's CI with TrixiBase.jl v0.1.11. There, bare-Symbol kwarg values were
+    # quoted before being spliced into the elixir, so that they ended up as `Symbol`
+    # *values* instead of references to the variables they name. Since
+    # `@test_trixi_include_base` passes elixir-internal names as bare `Symbol`s
+    # (case 3 in `src/macros.jl`), an override such as
+    #   @test_trixi_include_base(elixir, initial_condition=initial_condition_xyz)
+    # then assigned `initial_condition = :initial_condition_xyz` in the elixir.
+    @trixi_testset "elixir-internal Symbol override used as a function" begin
+        example_base = """
+            initial_condition_base(x) = 2.0
+
+            initial_condition = identity
+            u0 = initial_condition(0.0)
+            """
+        example_wrapper = """
+            initial_condition_wrapper(x) = 3.0
+
+            initial_condition = identity
+            u0 = initial_condition(0.0)
+            """
+
+        mktemp() do path, io
+            write(io, example_base)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :initial_condition_base))
+
+            @test_trixi_include_base(path, initial_condition=initial_condition_base)
+            @test (@invokelatest mod.u0) == 2.0
+        end
+
+        mktemp() do path, io
+            write(io, example_wrapper)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :initial_condition_wrapper))
+
+            @test_trixi_include(path, initial_condition=initial_condition_wrapper)
+            @test (@invokelatest mod.u0) == 3.0
+        end
+    end
+
+    @trixi_testset "elixir-internal Symbol override used as a number" begin
+        example_base = """
+            maxiters_base = 3
+
+            maxiters = 100
+            finished = 5 > maxiters
+            """
+        example_wrapper = """
+            maxiters_wrapper = 4
+
+            maxiters = 100
+            finished = 5 > maxiters
+            """
+
+        mktemp() do path, io
+            write(io, example_base)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :maxiters_base))
+
+            @test_trixi_include_base(path, maxiters=maxiters_base)
+            @test (@invokelatest mod.maxiters) == 3
+            @test (@invokelatest mod.finished) == true
+        end
+
+        mktemp() do path, io
+            write(io, example_wrapper)
+            close(io)
+            mod = @__MODULE__
+
+            @test !(@invokelatest isdefined(mod, :maxiters_wrapper))
+
+            @test_trixi_include(path, maxiters=maxiters_wrapper)
+            @test (@invokelatest mod.maxiters) == 4
+            @test (@invokelatest mod.finished) == true
+        end
+    end
+
     @trixi_testset "additional_ignore_content" begin
         example = """
             @warn "Test warning"
