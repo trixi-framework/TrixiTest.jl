@@ -8,6 +8,6 @@ TrixiBase = "9a0f1c46-06d5-4909-a5a3-ce25d3fa3284"
 [compat]
 Aqua = "0.8"
 DoubleFloats = "1.4"
-LinearAlgebra = "1"
-Test = "1"
+LinearAlgebra = "1, < 0.0.1"
+Test = "1, < 0.0.1"
 TrixiBase = "0.1.6, 0.2"
